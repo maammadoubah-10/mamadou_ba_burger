@@ -1,0 +1,40 @@
+image: docker:latest
+
+variables:
+  DOCKER_HOST: tcp://docker:2375/
+  DOCKER_DRIVER: overlay2
+  APP_NAME: "mamadou_ba_burger"
+  REPO: "https://gitlab.com/maammadoubah/mamadou_ba_burger.git"
+      
+stages:
+  - pull_code
+  - install_dependencies
+  - build_image
+
+before_script:
+  - apk add --no-cache curl git unzip docker-cli docker-compose
+  - echo "Pipeline démarré 🚀"
+
+pull_code:
+  stage: pull_code
+  script:
+    - echo "📥 Pull du code depuis GitHub"
+    - git clone https://github.com/maammadoubah-10/mamadou_ba_burger.git .
+    - git checkout mamadouba_ba_burger
+  only:
+    - mamadou_ba_burger
+
+install_dependencies:
+  stage: install_dependencies
+  script:
+    - echo "📦 Installation des dépendances Laravel"
+    - composer install --no-interaction --prefer-dist --optimize-autoloader
+    - php artisan config:clear
+    - php artisan cache:clear
+
+build_image:
+  stage: build_image
+  script:
+    - echo "🐳 Construction de l'image Docker"
+    - docker build -t $REPO:latest .
+    - echo "✅ Image Docker créée"
